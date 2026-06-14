@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>珈蓉启睿 · 路基病害监测系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* 避免拖动文字干扰点击，不影响输入框 */
+        }
+
+        body {
+            background: #eef2f5;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 主容器卡片风格 */
+        .app-container {
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        /* 页面内容区域 */
+        .page {
+            padding: 28px 32px 36px;
+            display: none;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .page.active-page {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        /* 返回按钮条 */
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            border-bottom: 1px solid #e9edf2;
+            padding-bottom: 12px;
+        }
+        .back-btn {
+            background: #f0f2f5;
+            border: none;
+            font-size: 1rem;
+            padding: 8px 18px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #1e466e;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+        }
+        .back-btn:hover {
+            background: #e4e9f0;
+            transform: translateX(-2px);
+        }
+        .back-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            background: #f0f2f5;
+        }
+        .title-section {
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: #0b2b40;
+            letter-spacing: -0.2px;
+        }
+
+        /* 首页大按钮 */
+        .home-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 50px;
+            margin-bottom: 30px;
+        }
+        .big-btn {
+            background: linear-gradient(135deg, #1a5f7a, #0d3f55);
+            color: white;
+            border: none;
+            font-size: 1.8rem;
+            font-weight: 600;
+            padding: 28px 48px;
+            min-width: 240px;
+            border-radius: 64px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 8px 18px rgba(0,32,64,0.2);
+            letter-spacing: 2px;
+        }
+        .big-btn:hover {
+            transform: scale(1.02);
+            background: linear-gradient(135deg, #217a9b, #11556e);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        }
+        .big-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 表单卡片样式 */
+        .form-card {
+            background: #f9fafc;
+            border-radius: 28px;
+            padding: 24px 28px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            border: 1px solid #eef2f8;
+        }
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 28px;
+            align-items: flex-end;
+        }
+        .filter-item {
+            flex: 1 1 180px;
+            min-width: 140px;
+        }
+        .filter-item label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #2c5a7a;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+        }
+        select, .filter-item span {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 20px;
+            border: 1px solid #cfdfed;
+            background: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #1e3b4f;
+            outline: none;
+            transition: 0.2s;
+        }
+        select:focus {
+            border-color: #1a7f9e;
+            box-shadow: 0 0 0 2px rgba(26,95,122,0.2);
+        }
+        .confirm-btn {
+            background: #1a5f7a;
+            color: white;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .confirm-btn:hover {
+            background: #0e4b62;
+            transform: translateY(-1px);
+        }
+
+        /* 表格样式 */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 20px 0;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            background: white;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th {
+            background: #eef3fc;
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #1f5068;
+        }
+        td {
+            padding: 12px 12px;
+            border-top: 1px solid #ecf1f6;
+            color: #2c3f4c;
+        }
+        .file-link {
+            color: #1a7f9e;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px dashed #8bc0d4;
+            cursor: pointer;
+        }
+        .file-link:hover {
+            color: #0c5b74;
+            border-bottom-style: solid;
+        }
+        .badge {
+            background: #eef2fa;
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #1e5a77;
+        }
+        .info-message {
+            background: #eef6fc;
+            padding: 18px;
+            border-radius: 24px;
+            text-align: center;
+            color: #2c697e;
+            margin: 20px 0;
+        }
+        .doc-detail {
+            background: #fef7e0;
+            padding: 24px;
+            border-radius: 28px;
+            margin-top: 20px;
+            border-left: 6px solid #ffb347;
+        }
+        .demo-notice {
+            background: #fef5e7;
+            border-left: 5px solid #f5b042;
+            padding: 12px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #a86903;
+            margin: 12px 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .demo-notice span:first-child {
+            font-size: 1.2rem;
+        }
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 32px;
+            color: #93a9bb;
+            border-top: 1px solid #eef2f8;
+            padding-top: 20px;
+        }
+        @media (max-width: 640px) {
+            .page { padding: 20px 16px; }
+            .big-btn { font-size: 1.2rem; padding: 18px 28px; min-width: 160px; }
+            .filter-group { gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container" id="app">
+    <!-- 页面1: 主菜单 -->
+    <div id="page1" class="page active-page">
+        <div class="nav-bar">
+            <div></div>
+            <div class="title-section">🏗️ 路基病害智能监测系统</div>
+            <button class="back-btn disabled" id="backPage1" disabled>← 返回</button>
+        </div>
+        <div style="text-align: center; margin: 12px 0 8px;">
+            <span class="badge">珈蓉启睿 · InSAR 技术</span>
+        </div>
+        <div class="home-buttons">
+            <button class="big-btn" id="btnMonitorResult">📊 监测成果</button>
+            <button class="big-btn" id="btnOnlineMonitor">📡 在线监测</button>
+        </div>
+        <footer>兰州局 · 路基沉降及病害智能预警平台</footer>
+    </div>
+
+    <!-- 页面2: 在线监测（建设中） -->
+    <div id="page2" class="page">
+        <div class="nav-bar">
+            <button class="back-btn" id="backFromPage2">← 返回</button>
+            <div class="title-section">📡 在线监测系统</div>
+            <div></div>
+        </div>
+        <div class="info-message" style="background: #e9ecef;">
+            ⚙️ 在线监测系统正在制作中……  
+        </div>
+        <div style="text-align: center; padding: 28px 10px;">
+            <div style="font-size: 4rem;">📶</div>
+            <p style="color: #5e7e97; margin-top: 16px;">实时监测模块即将上线，敬请期待<br>（包含北斗+InSAR融合数据流）</p>
+        </div>
+        <footer>珈蓉启睿科技 · 动态监测研发中</footer>
+    </div>
+
+    <!-- 页面3: 监测成果查询表单 -->
+    <div id="page3" class="page">
+        <div class="nav-bar">
+            <button class="back-btn" id="backFromPage3">← 返回</button>
+            <div class="title-section">📋 监测成果查询</div>
+            <div></div>
+        </div>
+        <div class="form-card">
+            <div class="filter-group">
+                <div class="filter-item">
+                    <label>🏭 工务段名</label>
+                    <select id="depName">
+                        <option value="定西工务段">定西工务段</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>🛤️ 线名</label>
+                    <select id="lineName">
+                        <option value="陇海线">陇海线</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>🚉 车站名起</label>
+                    <select id="stationStart">
+                        <option value="南河川">南河川</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>🚉 车站名止</label>
+                    <select id="stationEnd">
+                        <option value="新阳镇">新阳镇</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>📅 日期 (季度)</label>
+                    <select id="quarterSelect">
+                        <option value="2025年2季度">2025年2季度</option>
+                        <option value="2025年3季度">2025年3季度</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <button class="confirm-btn" id="confirmQueryBtn">✅ 确认</button>
+                </div>
+            </div>
+            <div style="font-size: 0.75rem; color:#6c8ea0; margin-top: 6px;">* 选择季度后确认，查看对应InSAR监测成果列表（完全采用兰州局路基病害监测规范命名）</div>
+        </div>
+        <footer>基于InSAR形变场与路基专项监测</footer>
+    </div>
+
+    <!-- 页面4: 成果表格 (完全基于豆包版文件名称及数量) -->
+    <div id="page4" class="page">
+        <div class="nav-bar">
+            <button class="back-btn" id="backFromPage4">← 返回</button>
+            <div class="title-section">📂 路基病害监测成果清单（示意）</div>
+            <div></div>
+        </div>
+        <div id="queryInfoBar" style="background:#f4f9fe; border-radius: 20px; padding: 10px 16px; margin-bottom: 18px; font-size:0.85rem;">
+            <!-- 动态显示查询条件 -->
+        </div>
+        <div class="demo-notice">
+            <span>📌</span> <strong>示意说明：</strong> 本页面所列成果清单为系统演示示意数据，模拟InSAR监测报告、时序数据、图件成果等，真实项目请以最终正式交付成果为准。
+        </div>
+        <div class="table-wrapper">
+            <table id="resultTable">
+                <thead>
+                    <tr><th>文件名称 <span style="font-weight:normal;">(超级链接)</span></th><th>成果类型</th><th>监测季度</th><th>大小/备注</th></tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="4" style="text-align:center;">请从上一页选择季度并确认</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <footer>点击文件名称可查看详细成果描述（示意详情）</footer>
+    </div>
+
+    <!-- 页面5: 文档详情页 -->
+    <div id="page5" class="page">
+        <div class="nav-bar">
+            <button class="back-btn" id="backFromPage5">← 返回</button>
+            <div class="title-section">📄 成果详情</div>
+            <div></div>
+        </div>
+        <div id="fileDetailContainer" class="doc-detail">
+            <div style="font-size:1.2rem; font-weight:600;">📎 文件详情</div>
+            <div id="detailContent" style="margin-top: 20px; line-height:1.5;">正在加载...</div>
+        </div>
+        <footer>数据基于SAR卫星及地面验证数据联合解译</footer>
+    </div>
+</div>
+
+<script>
+    // ---------- 历史记录管理 (模拟浏览器栈，支持返回上一页) ----------
+    let historyStack = ['page1'];   // 初始页面为 page1
+    let currentPageId = 'page1';
+
+    const pages = {
+        page1: document.getElementById('page1'),
+        page2: document.getElementById('page2'),
+        page3: document.getElementById('page3'),
+        page4: document.getElementById('page4'),
+        page5: document.getElementById('page5')
+    };
+
+    function showPage(pageId, addToHistory = true) {
+        if (!pages[pageId]) return;
+        if (currentPageId === pageId) return;
+        if (addToHistory) {
+            if (historyStack[historyStack.length - 1] !== pageId) {
+                historyStack.push(pageId);
+            }
+        }
+        Object.keys(pages).forEach(pid => {
+            pages[pid].classList.remove('active-page');
+        });
+        pages[pageId].classList.add('active-page');
+        currentPageId = pageId;
+        updateBackButtonState();
+    }
+
+    function goBack() {
+        if (historyStack.length <= 1) return;
+        historyStack.pop();
+        const prevPage = historyStack[historyStack.length - 1];
+        if (prevPage && pages[prevPage]) {
+            Object.keys(pages).forEach(pid => {
+                pages[pid].classList.remove('active-page');
+            });
+            pages[prevPage].classList.add('active-page');
+            currentPageId = prevPage;
+            updateBackButtonState();
+        }
+    }
+
+    function updateBackButtonState() {
+        const allBackBtns = document.querySelectorAll('.back-btn');
+        const isFirstPage = (historyStack.length <= 1);
+        allBackBtns.forEach(btn => {
+            if (isFirstPage) {
+                btn.classList.add('disabled');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('disabled');
+                btn.disabled = false;
+            }
+        });
+    }
+
+    // ---------- 辅助: 根据季度获取日期范围字符串 (完全遵循豆包版规则，2季度调整为20250401-20250630) ----------
+    function getDateRangeByQuarter(quarterValue) {
+        if (quarterValue === '2025年2季度') {
+            return "20250401-20250630";   // 按需求：2季度文件名日期范围为2025年4月1日至2025年6月30日
+        } else if (quarterValue === '2025年3季度') {
+            return "20250701-20250930";
+        }
+        return "20250701-20250930"; // fallback
+    }
+
+    // ---------- 核心: 完全基于豆包版tableData (11项原始条目，其中文档成果拆为两个独立文件) ----------
+    // 豆包版原始定义: 数据成果5个，图件成果5个，文档成果1个(含双pdf) -> 拆开成独立两个，共12个文件
+    // 每个文件动态生成 前缀(起止站) + 文件核心名 + 日期范围 + 扩展名
+    function generateDoubaoFilesList(quarterValue, startStation, endStation) {
+        const dateRange = getDateRangeByQuarter(quarterValue);
+        const prefix = `${startStation}-${endStation}`;  // 例如: 南河川-新阳镇
+        
+        // 定义文件模板 (完全取自豆包版，保持类型与命名风格)
+        // 数据成果 (5项)
+        const dataFiles = [
+            { baseName: "点目标数据", ext: ".xlsx", typeLabel: "数据成果 · 点目标数据", remark: "包含各PS点时序形变值及标准差" },
+            { baseName: "点目标形变速率数据", ext: ".xlsx", typeLabel: "数据成果 · 点目标形变速率", remark: "平均形变速率(mm/yr)，点目标级" },
+            { baseName: "点目标累计形变量数据", ext: ".xlsx", typeLabel: "数据成果 · 累计形变量", remark: "各期相对于基准期的累计沉降量" },
+            { baseName: "插值形变速率数据", ext: ".tif", typeLabel: "数据成果 · 插值形变速率", remark: "克里金插值获取连续形变速率场" },
+            { baseName: "插值累计形变量数据", ext: ".tif", typeLabel: "数据成果 · 插值累计形变量", remark: "连续表面累计沉降分布" }
+        ];
+        
+        // 图件成果 (5项) 对应豆包版图件名称
+        const mapFiles = [
+            { baseName: "点目标分布图", ext: ".tif", typeLabel: "图件成果 · 点目标分布图", remark: "PS点空间分布及密度示意" },
+            { baseName: "点目标形变速率图", ext: ".tif", typeLabel: "图件成果 · 形变速率图", remark: "点目标形变速率色阶渲染" },
+            { baseName: "点目标累计形变速率图", ext: ".tif", typeLabel: "图件成果 · 累计形变速率图", remark: "累计形变量时序渐变图" },
+            { baseName: "插值形变速率图", ext: ".tif", typeLabel: "图件成果 · 插值形变速率图", remark: "全断面插值形变速率等值线" },
+            { baseName: "插值累计形变速率图", ext: ".tif", typeLabel: "图件成果 · 插值累计形变速率图", remark: "插值累计沉降量分布及异常区" }
+        ];
+        
+        // 文档成果: 监测报告 & 精度验证报告 (独立两个)
+        const docFiles = [
+            { baseName: "铁路路基沉降监测报告", ext: ".pdf", typeLabel: "文档成果 · 监测报告", remark: "含整体沉降、差异沉降、典型断面分析及维护建议" },
+            { baseName: "精度验证报告", ext: ".pdf", typeLabel: "文档成果 · 精度验证报告", remark: "基于实测水准点的InSAR精度评定及可靠性分析" }
+        ];
+        
+        const allFileTemplates = [...dataFiles, ...mapFiles, ...docFiles];
+        
+        // 生成最终文件列表对象
+        const fileList = allFileTemplates.map(template => {
+            // 完整文件名格式: 南河川-新阳镇_点目标数据_20250401-20250630.xlsx
+            const fullFileName = `${prefix}_${template.baseName}_${dateRange}${template.ext}`;
+            // 模拟文件大小 (不同文件不同示意)
+            let sizeStr = "";
+            if (template.ext === ".xlsx") sizeStr = "1.2 MB";
+            else if (template.ext === ".tif") sizeStr = "4.7 MB";
+            else if (template.ext === ".pdf") sizeStr = "2.3 MB";
+            else sizeStr = "1.0 MB";
+            
+            return {
+                name: fullFileName,
+                type: template.typeLabel,
+                quarter: quarterValue,
+                size: sizeStr,
+                remark: template.remark,
+                baseTypeKey: template.baseName
+            };
+        });
+        
+        return fileList;
+    }
+
+    let currentFileList = [];   // 存储当前展示文件列表
+    
+    // 渲染页面4表格 (基于过滤条件生成豆包版完整文件清单)
+    function renderResultPage() {
+        const dep = document.getElementById('depName').value;
+        const line = document.getElementById('lineName').value;
+        const start = document.getElementById('stationStart').value;
+        const end = document.getElementById('stationEnd').value;
+        const quarter = document.getElementById('quarterSelect').value;
+        
+        // 根据起止站、季度生成12个标准文件 (完全采用豆包版命名体系)
+        const files = generateDoubaoFilesList(quarter, start, end);
+        currentFileList = files;
+        
+        const infoDiv = document.getElementById('queryInfoBar');
+        infoDiv.innerHTML = `🔍 当前查询条件：${dep} · ${line} · ${start} → ${end} · ${quarter} &nbsp;&nbsp;<span style="background:#e0edf6; padding:2px 10px; border-radius:24px;">共 ${files.length} 项成果</span>`;
+        
+        const tbody = document.getElementById('tableBody');
+        if (!files.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">暂无监测成果，请尝试其他季度</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        files.forEach((file, idx) => {
+            // 转义
+            const safeName = escapeHtml(file.name);
+            const safeType = escapeHtml(file.type);
+            const safeQuarter = escapeHtml(file.quarter);
+            const safeSize = escapeHtml(file.size);
+            const safeRemark = escapeHtml(file.remark);
+            html += `<tr>
+                        <td><a class="file-link" data-filename="${safeName}" data-filetype="${safeType}" data-extrainfo="${safeRemark}" data-size="${safeSize}" data-quarter="${safeQuarter}" data-rawindex="${idx}">📄 ${safeName}</a></td>
+                        <td>${safeType}</td>
+                        <td>${safeQuarter}</td>
+                        <td>${safeSize} · ${safeRemark.substring(0, 35)}${safeRemark.length>35?'…':''}</td>
+                      </tr>`;
+        });
+        tbody.innerHTML = html;
+        
+        // 绑定超链接点击事件
+        document.querySelectorAll('.file-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const fileName = link.getAttribute('data-filename');
+                const fileType = link.getAttribute('data-filetype');
+                const extraInfo = link.getAttribute('data-extrainfo');
+                const fileSize = link.getAttribute('data-size');
+                const quarterInfo = link.getAttribute('data-quarter');
+                showFileDetail(fileName, fileType, extraInfo, fileSize, quarterInfo);
+                showPage('page5', true);
+            });
+        });
+    }
+    
+    // 增强版详情展示: 根据不同文件类型提供专业描述，完全符合豆包版内容体系
+    function showFileDetail(fileName, fileType, extraInfo, fileSize, quarterInfo) {
+        const detailContainer = document.getElementById('detailContent');
+        if (!detailContainer) return;
+        
+        // 解析文件名获得更精确的展示 (可识别点目标、插值、监测报告等)
+        let enhancedDesc = "";
+        if (fileName.includes("点目标数据") && fileName.includes(".xlsx")) {
+            enhancedDesc = "包含各相干点目标的时序形变数据库、坐标信息及累计沉降量，支持整体沉降与差异沉降点级分析。提供每个监测期（2025季度）相对于基准期的形变序列。";
+        } else if (fileName.includes("点目标形变速率数据")) {
+            enhancedDesc = "点目标级形变速率（mm/yr），基于PS-InSAR解算获取的年度平均速率，用于识别沉降漏斗和差异沉降高风险区段。";
+        } else if (fileName.includes("点目标累计形变量数据")) {
+            enhancedDesc = "相对于起始观测时刻的累计形变量，反映路基逐期累积沉降趋势，辅助判断路基稳定性阶段。";
+        } else if (fileName.includes("插值形变速率数据")) {
+            enhancedDesc = "克里金插值生成的全断面形变速率栅格，空间分辨率提升，便于整体沉降分布识别及过渡段差异变形分析。";
+        } else if (fileName.includes("插值累计形变量数据")) {
+            enhancedDesc = "连续表面累计沉降栅格图层，反映整个监测区形变场时空演化，直观展示沉降中心与影响范围。";
+        } else if (fileName.includes("点目标分布图")) {
+            enhancedDesc = "PS点及DS点空间分布图，反映雷达目标密度及覆盖情况，辅助判断监测数据可靠性。";
+        } else if (fileName.includes("点目标形变速率图")) {
+            enhancedDesc = "基于点目标形变速率的专题图，采用色阶标识沉降/抬升区域，便于快速定位病害段落。";
+        } else if (fileName.includes("点目标累计形变速率图")) {
+            enhancedDesc = "点目标累计形变量成图显示，展示各点目标从基准期至当前时期的沉降总量分布。";
+        } else if (fileName.includes("插值形变速率图")) {
+            enhancedDesc = "插值速率可视化图件，突出差异沉降过渡带及边坡微小形变异常区。";
+        } else if (fileName.includes("插值累计形变速率图")) {
+            enhancedDesc = "插值累计形变等值线图，结合铁路里程标识，直观呈现路基病害重点段落。";
+        } else if (fileName.includes("铁路路基沉降监测报告")) {
+            enhancedDesc = "综合InSAR监测成果，分析线路整体沉降及典型断面差异沉降，包含沉降量统计、形变时序曲线和维修对策建议，满足兰州局路基病害管理要求。";
+        } else if (fileName.includes("精度验证报告")) {
+            enhancedDesc = "基于实地水准测量数据或北斗验证点，对InSAR解译结果进行精度评定，提供中误差、相关系数等指标，确保监测成果可靠性。";
+        } else {
+            enhancedDesc = "基于SAR卫星影像及永久散射体技术获取路基形变信息，该成果涵盖形变速率、累计沉降及病害图件，辅助现场养护决策。";
+        }
+        
+        // 附加说明日期，起止站信息从文件名提取（可选）
+        const displayHtml = `
+            <div style="background:white; border-radius: 24px; padding: 20px;">
+                <p style="font-size:1.4rem; font-weight:600; border-bottom:2px solid #ffb347; display:inline-block; padding-right:12px;">📑 ${escapeHtml(fileName)}</p>
+                <div style="margin-top: 24px; display:grid; gap: 12px;">
+                    <div><span style="font-weight:600;">📂 成果类型：</span> ${escapeHtml(fileType)}</div>
+                    <div><span style="font-weight:600;">📅 监测季度：</span> ${escapeHtml(quarterInfo)}</div>
+                    <div><span style="font-weight:600;">⚖️ 文件大小：</span> ${escapeHtml(fileSize)}</div>
+                    <div><span style="font-weight:600;">📌 专项说明：</span> ${escapeHtml(extraInfo)}</div>
+                    <div><span style="font-weight:600;">🔬 内容摘要（示意·专业解读）：</span><br> ${enhancedDesc}<br>基于InSAR技术获取该段落路基形变场，异常点识别及沉降速率分析，完全遵循兰州局路基病害监测标准。
+                    </div>
+                    <div style="background:#f3f7fb; border-radius: 20px; padding: 14px; margin-top: 8px;">
+                    ⚡ 该成果通过兰州局工务部审核，支持在线预览及完整下载（模拟环境）。<br>
+                    <span style="font-size:0.8rem;">*本系统为示意展示，真实数据包含高分辨率影像及矢量成果。</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        detailContainer.innerHTML = displayHtml;
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // 初始化事件绑定
+    function initEvents() {
+        document.getElementById('btnMonitorResult').addEventListener('click', () => {
+            showPage('page3', true);
+        });
+        document.getElementById('btnOnlineMonitor').addEventListener('click', () => {
+            showPage('page2', true);
+        });
+        
+        document.getElementById('backFromPage2')?.addEventListener('click', goBack);
+        document.getElementById('backFromPage3')?.addEventListener('click', goBack);
+        document.getElementById('backFromPage4')?.addEventListener('click', goBack);
+        document.getElementById('backFromPage5')?.addEventListener('click', goBack);
+        const backPage1 = document.getElementById('backPage1');
+        if(backPage1) backPage1.addEventListener('click', goBack);
+        
+        document.getElementById('confirmQueryBtn').addEventListener('click', () => {
+            // 根据当前筛选条件，生成豆包版完整表格数据并展示
+            renderResultPage();
+            showPage('page4', true);
+        });
+    }
+    
+    function initHistory() {
+        historyStack = ['page1'];
+        currentPageId = 'page1';
+        updateBackButtonState();
+        // 保证页面初始时表格有默认占位
+        const tbody = document.getElementById('tableBody');
+        if(tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">请先选择季度并点击确认</td></tr>';
+    }
+    
+    window.addEventListener('DOMContentLoaded', () => {
+        initHistory();
+        initEvents();
+    });
+</script>
+</body>
+</html>
